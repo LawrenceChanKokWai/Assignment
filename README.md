@@ -168,12 +168,18 @@ python3 build.py
 
 ## Testing 
 - Run all unit tests:
-```
+```bash
 python3 -m unittest -v  
 
 OR
 
 python3 -m unittest discover -s tests -p "test_*.py" -v
+```
+
+## Optionally:
+- You may RUN **./build.sh** for convience & select the `option`:
+```bash
+./build.sh
 ```
 
 ## References used
