@@ -115,3 +115,4 @@ assessmentTwo
 - Modular Docs / TemporaryDirectory https://docs.modular.com/mojo/std/tempfile/tempfile/TemporaryDirectory
 - Modular Docs / testing https://docs.modular.com/mojo/std/testing/testing/
 - Modular Docs / Dictionary https://docs.modular.com/mojo/std/collections/dict/Dict/
+- re — Regular expression operations https://docs.python.org/3/library/re.html
