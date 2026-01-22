@@ -5,7 +5,7 @@ import re
 from tempfile import TemporaryDirectory
 from pathlib import Path
 
-from build_core import write_file, _update_file_using_regex, PatternMatchError
+from build_core import write_file, _update_file_using_regex, PatternMatchError, _apply_updates
 
 class TestWriteFile( unittest.TestCase ):
     def test_write_file_and_permissions( self ):
@@ -102,5 +102,48 @@ class TestUpdateFileWithRegex( unittest.TestCase ):
             self.assertFalse(changed)
             self.assertEqual(path.read_text(encoding="utf-8"), "point=123,\n")
             
+class TestApplyUpdates( unittest.TestCase ):
+    def test_apply_updating_two_files( self ):
+        with TemporaryDirectory() as temp_dir:
+            root = Path( temp_dir )
+            file1 = root / "a"
+            file2 = root / "b"
+            
+            file1.write_text( "point=1,\n", encoding="utf-8" )
+            file2.write_text( "ADLMSDK_VERSION_POINT=1\n", encoding="utf-8" )
+            
+            pattern1 = re.compile( r"(point=)\d+(,)" )
+            pattern2 = re.compile( r"(ADLMSDK_VERSION_POINT=)\d+" )
+            
+            updates = [
+                ("SConstruct", file1, pattern1, r"\g<1>123\g<2>"),
+                ("VERSION", file2, pattern2, r"\g<1>123")
+            ]
+            
+            result = _apply_updates( updates )
+            self.assertEqual( result, {"SConstruct": True, "VERSION": True} )
+            self.assertEqual( file1.read_text(encoding="utf-8"), "point=123,\n" )
+            self.assertEqual( file2.read_text(encoding="utf-8"), "ADLMSDK_VERSION_POINT=123\n" )
+            
+    def test_apply_updates_returns_false_when_no_change_occurs( self ):
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            file1 = root / "a.txt"
+            file2 = root / "b.txt"
+
+            file1.write_text("point=123,\n", encoding="utf-8")
+            file2.write_text("ADLMSDK_VERSION_POINT=123\n", encoding="utf-8")
+
+            pat1 = re.compile(r"(point=)\d+(,)")
+            pat2 = re.compile(r"(ADLMSDK_VERSION_POINT=)\d+")
+
+            updates = [
+                ("SConstruct", file1, pat1, r"\g<1>123\g<2>"),
+                ("VERSION", file2, pat2, r"\g<1>123")
+            ]
+
+            result = _apply_updates(updates)
+            self.assertEqual(result, {"SConstruct": False, "VERSION": False})
+                        
 if __name__ == "__main__":
     unittest.main

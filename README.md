@@ -108,6 +108,74 @@ assessmentTwo
     └── test_build.py           #test file
 ```
 
+---
+### Constraints
+This refactor code enforces **exact matching** to avoid corruption.
+- Both target file must exsist
+- The regex pattern must match **exactly one time** in the file. Which means:
+    - IF **0 matches**, "FAIL"
+    - IF **Greater than 1 matches**, TRUE
+- IF the replacement produces the same content, the file content shall not be rewritten. 
+
+### Benifits
+- Writes will be performed using a temporary file by using NamedTemporaryFile, and replaced using `os.replace(...)` performing the update.
+- Original file permissions are preserved.
+
+### Pseudocode
+- High Level algorithm:
+```python
+READ SourcePath from the enviroment
+READ BuildNum from the environment
+IF SourcePath or BuildNum are not set:
+    PRINT the error
+EXIT with a non-zero code
+
+SET SourcePath/develop/global/src to base_dir
+DEFINE updaterules:
+    RULE1: 
+        base_dir/SConstruct as file
+        (point\s*=\s*)\d+(\s*,) as the pattern
+        group1 + BuildNum + group2 as replacement
+    RULE2:
+        base_dir/VERSION as file
+        (ADLMSDK_VERSION_POINT\s*=\s*)\d+ as pattern
+        group1 + BuildNum as replacement
+FOR each of the rule in update:
+    IF file does not exist:
+        RAISE FileNotFoundError Exception
+    READ the file content
+        FIND matches using regex
+    IF number of matches is not 1
+        RAISE PatternMatchError Exception
+APPLY replacement
+    IF updated content is the same as the original content:
+        MARK result as "NO CHANGE"
+    ELSE:
+        WRITE with the updated content
+        MARK the result as "UPDATED"
+PRINT the result
+EXIT with success
+```
+
+## Running the program
+- From the project root: export the details and run the program.
+```bash
+export SourcePath="$(pwd)
+export BuildNum="**the build number**"
+
+python3 build.py
+```
+
+## Testing 
+- Run all unit tests:
+```
+python3 -m unittest -v  
+
+OR
+
+python3 -m unittest discover -s tests -p "test_*.py" -v
+```
+
 ## References used
 - Make your Python Code More Readable with Custom Exceptions https://www.youtube.com/watch?v=hLLaw9BI-EE
 -  Modular Docs / NamedTemporaryFile https://docs.modular.com/mojo/std/tempfile/tempfile/NamedTemporaryFile/
